@@ -53,6 +53,7 @@ public class DefaultWallpaperRefresher implements WallpaperRefresher {
     private final Context mAppContext;
     private final WallpaperPreferences mWallpaperPreferences;
     private final WallpaperManager mWallpaperManager;
+    private final WallpaperStatusChecker mWallpaperStatusChecker;
 
     private final Context mWindowContext;
 
@@ -64,6 +65,7 @@ public class DefaultWallpaperRefresher implements WallpaperRefresher {
 
         Injector injector = InjectorProvider.getInjector();
         mWallpaperPreferences = injector.getPreferences(mAppContext);
+        mWallpaperStatusChecker = injector.getWallpaperStatusChecker();
 
         // Retrieve WallpaperManager using Context#getSystemService instead of
         // WallpaperManager#getInstance so it can be mocked out in test.
@@ -109,8 +111,8 @@ public class DefaultWallpaperRefresher implements WallpaperRefresher {
                 setFallbackHomeScreenWallpaperMetadata();
             }
 
-            boolean isLockScreenWallpaperCurrentlySet = LockWallpaperStatusChecker
-                    .isLockWallpaperSet(mAppContext);
+            boolean isLockScreenWallpaperCurrentlySet = mWallpaperStatusChecker.isLockWallpaperSet(
+                    mAppContext);
 
             if (!BuildCompat.isAtLeastN() || !isLockScreenWallpaperCurrentlySet) {
                 // Return only home metadata if pre-N device or lock screen wallpaper is not explicitly set.
@@ -237,7 +239,7 @@ public class DefaultWallpaperRefresher implements WallpaperRefresher {
 
         private long getCurrentLockWallpaperHashCode() {
             if (mCurrentLockWallpaperHashCode == 0
-                    && LockWallpaperStatusChecker.isLockWallpaperSet(mAppContext)) {
+                    && mWallpaperStatusChecker.isLockWallpaperSet(mAppContext)) {
                 Bitmap wallpaperBitmap = getLockWallpaperBitmap();
                 mCurrentLockWallpaperHashCode = BitmapUtils.generateHashCode(wallpaperBitmap);
             }
